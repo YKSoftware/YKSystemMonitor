@@ -61,10 +61,16 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Models\AxisData.cs" />
     <Compile Include="Models\component\CpuCounterManager.cs" />
     <Compile Include="Models\component\ProcessCounterManager.cs" />
     <Compile Include="Models\CounterManager.cs" />
+    <Compile Include="Models\component\MemoryCounterManager.cs" />
+    <Compile Include="Models\component\ProcessCounter.cs" />
+    <Compile Include="Models\GraphItem.cs" />
+    <Compile Include="Models\ProductInfo.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="Views\Converters\ValueConverter.cs" />
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>

@@ -2,22 +2,159 @@
            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
            xmlns:YK="clr-namespace:YKToolkit.Controls;assembly=YKToolkit.Controls"
-           Title="MainView"
+           xmlns:c="clr-namespace:YKSystemMonitor.Views.Converters"
+           Title="{Binding Title}"
            Width="800" Height="600"
-           WindowStartupLocation="CenterScreen">
+           WindowStartupLocation="CenterScreen"
+           IsClosingConfirmationEnabled="False">
+    <YK:Window.Resources>
+        <c:ValueConverter x:Key="ValueConverter" />
+    </YK:Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
-            <ColumnDefinition />
+            <ColumnDefinition Width="2*" />
         </Grid.ColumnDefinitions>
 
-        <ListBox ItemsSource="{Binding ProcessNames}" />
-        <StackPanel Grid.Column="1">
-            <TextBlock Text="追加されたプロセス" />
-            <ListBox ItemsSource="{Binding AddedProcessNames}" MinHeight="40" MaxHeight="100" />
+        <DockPanel Margin="8">
+            <StackPanel DockPanel.Dock="Top">
+                <TextBlock Text="{Binding PcManager.CpuCores, StringFormat='{}CPU コア数 : {0}'}" />
+                <TextBlock Text="{Binding PcManager.CpuTotalUseRate, StringFormat='{}CPU 使用率 : {0:f2} %'}" />
+                <CheckBox x:Name="IsTotalPageFaultsEnabled">
+                    <TextBlock Text="{Binding PcManager.PageFaults, StringFormat='{}ページフォルト : {0:N0}'}" />
+                </CheckBox>
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Bottom">
+                <TextBlock Text="前回追加されたプロセス" />
+                <ListBox ItemsSource="{Binding PcManager.AddedProcessNames}" MinHeight="40" MaxHeight="100" />
 
-            <TextBlock Text="削除されたプロセス" Margin="0,20,0,0" />
-            <ListBox ItemsSource="{Binding RemovedProcessNames}" MinHeight="40" MaxHeight="100" />
+                <TextBlock Text="前回削除されたプロセス" Margin="0,20,0,0" />
+                <ListBox ItemsSource="{Binding PcManager.RemovedProcessNames}" MinHeight="40" MaxHeight="100" />
         </StackPanel>
+            <ListBox ItemsSource="{Binding PcManager.ProcessNames}" SelectedItem="{Binding PcManager.CurrentProcessName}" />
+        </DockPanel>
+
+        <DockPanel Grid.Column="1">
+            <TextBlock DockPanel.Dock="Top">
+                <TextBlock.Style>
+                    <Style TargetType="{x:Type TextBlock}">
+                        <Setter Property="Text" Value="{Binding PcManager.CurrentProcessName, StringFormat='{}選択中のプロセス {0} の状況'}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding PcManager.CurrentProcessName}" Value="{x:Null}">
+                                <Setter Property="Text" Value="プロセスを選択してください。" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <StackPanel DockPanel.Dock="Top">
+                <StackPanel.Style>
+                    <Style TargetType="{x:Type StackPanel}">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding PcManager.CurrentProcessName}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <CheckBox x:Name="IsWorkingSetEnabled" IsChecked="True">
+                    <TextBlock Text="{Binding PcManager.CurrentProcessCounter.WorkingSet, StringFormat='{}Working Set : {0:N3}[MB]'}" />
+                </CheckBox>
+                <CheckBox x:Name="IsPrivateWorkingSetEnabled" IsChecked="True">
+                    <TextBlock Text="{Binding PcManager.CurrentProcessCounter.PrivateWorkingSet, StringFormat='{}Private Working Set : {0:N3}[MB]'}" />
+                </CheckBox>
+                <CheckBox x:Name="IsPageFaultsEnabled" IsChecked="True">
+                    <TextBlock Text="{Binding PcManager.CurrentProcessCounter.PageFaults, StringFormat='{}Page Faults/sec : {0:N0}'}" />
+                </CheckBox>
+                <TextBlock Text="{Binding PcManager.CurrentProcessCounter.VirtualBytes, StringFormat='{}Virtual Bytes : {0:N3}[MB]'}" />
+                <TextBlock Text="{Binding PcManager.CurrentProcessCounter.ThreadCount, StringFormat='{}スレッド数 : {0:N0}'}" />
+            </StackPanel>
+            <YK:LineGraph IsY2Enabled="True"
+                          TitleFontSize="14"
+                          XLabel="Time [s]" YLabel="Memory [MB]" Y2Label=""
+                          XLabelFontSize="12" YLabelFontSize="12" Y2LabelFontSize="12"
+                          GraphAreaMargin="80,40,60,40"
+                          LegendFontSize="12"
+                          LegendPositionLeft="86" LegendPositionTop="46"
+                          XMin="{Binding Axes.XMin}" XMax="{Binding Axes.XMax}" XStep="{Binding Axes.XStep}" XStringFormat="#0" XFontSize="12"
+                          YMin="{Binding Axes.YMin}" YMax="{Binding Axes.YMax}" YStep="{Binding Axes.YStep}" YStringFormat="N3" YFontSize="12"
+                          Y2Min="{Binding Axes.Y2Min}" Y2Max="{Binding Axes.Y2Max}" Y2Step="{Binding Axes.Y2Step}" Y2StringFormat="N0" Y2FontSize="12"
+                          >
+                <YK:LineGraph.Title>
+                    <MultiBinding StringFormat="{}{0} [Thread : {1}]">
+                        <Binding Path="PcManager.CurrentProcessName" />
+                        <Binding Path="PcManager.CurrentProcessCounter.ThreadCount" />
+                    </MultiBinding>
+                </YK:LineGraph.Title>
+                <YK:LineGraph.ItemsSource>
+                    <x:Array Type="{x:Type YK:LineGraphItem}">
+                        <YK:LineGraphItem Color="#FFE38025"
+                                          MarkerSize="0,0"
+                                          XAxisData="{Binding XAxisData}" YAxisData="{Binding WorkingSet.YAxisData}">
+                            <YK:LineGraphItem.Style>
+                                <Style TargetType="{x:Type YK:LineGraphItem}">
+                                    <Setter Property="Legend" Value="Working Set" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsChecked, ElementName=IsWorkingSetEnabled}" Value="False">
+                                            <Setter Property="Legend" Value="{x:Null}" />
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </YK:LineGraphItem.Style>
+                        </YK:LineGraphItem>
+                        <YK:LineGraphItem Color="#FF27CED7"
+                                          MarkerSize="0,0"
+                                          XAxisData="{Binding XAxisData}" YAxisData="{Binding PrivateWorkingSet.YAxisData}">
+                            <YK:LineGraphItem.Style>
+                                <Style TargetType="{x:Type YK:LineGraphItem}">
+                                    <Setter Property="Legend" Value="Private Working Set" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsChecked, ElementName=IsPrivateWorkingSetEnabled}" Value="False">
+                                            <Setter Property="Legend" Value="{x:Null}" />
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </YK:LineGraphItem.Style>
+                        </YK:LineGraphItem>
+                        <YK:LineGraphItem Color="#FF15C23C"
+                                          IsSecond="True"
+                                          MarkerSize="0,0"
+                                          XAxisData="{Binding XAxisData}" YAxisData="{Binding PageFaults.YAxisData}">
+                            <YK:LineGraphItem.Style>
+                                <Style TargetType="{x:Type YK:LineGraphItem}">
+                                    <Setter Property="Legend" Value="Page Faults" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsChecked, ElementName=IsPageFaultsEnabled}" Value="False">
+                                            <Setter Property="Legend" Value="{x:Null}" />
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </YK:LineGraphItem.Style>
+                        </YK:LineGraphItem>
+                        <YK:LineGraphItem Color="#FF666666"
+                                          IsSecond="True"
+                                          MarkerSize="0,0"
+                                          XAxisData="{Binding XAxisData}" YAxisData="{Binding TotalPageFaults.YAxisData}">
+                            <YK:LineGraphItem.Style>
+                                <Style TargetType="{x:Type YK:LineGraphItem}">
+                                    <Setter Property="Legend" Value="Total Page Faults" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsChecked, ElementName=IsTotalPageFaultsEnabled}" Value="False">
+                                            <Setter Property="Legend" Value="{x:Null}" />
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </YK:LineGraphItem.Style>
+                        </YK:LineGraphItem>
+                    </x:Array>
+                </YK:LineGraph.ItemsSource>
+            </YK:LineGraph>
+        </DockPanel>
     </Grid>
 </YK:Window>

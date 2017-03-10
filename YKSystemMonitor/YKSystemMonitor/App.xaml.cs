@@ -23,6 +23,8 @@
 
             this.DispatcherUnhandledException += OnDispatcherUnhandledException;
 
+            YKToolkit.Controls.ThemeManager.Instance.Initialize("Dark Orange");
+
             var w = new MainView() { DataContext = new MainViewModel() };
             w.Show();
         }
