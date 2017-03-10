@@ -6,6 +6,18 @@
            Width="800" Height="600"
            WindowStartupLocation="CenterScreen">
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <ListBox ItemsSource="{Binding ProcessNames}" />
+        <StackPanel Grid.Column="1">
+            <TextBlock Text="追加されたプロセス" />
+            <ListBox ItemsSource="{Binding AddedProcessNames}" MinHeight="40" MaxHeight="100" />
+
+            <TextBlock Text="削除されたプロセス" Margin="0,20,0,0" />
+            <ListBox ItemsSource="{Binding RemovedProcessNames}" MinHeight="40" MaxHeight="100" />
+        </StackPanel>
     </Grid>
 </YK:Window>

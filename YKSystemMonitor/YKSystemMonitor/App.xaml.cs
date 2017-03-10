@@ -34,6 +34,8 @@
         /// <param name="e">イベント引数</param>
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
+            e.Handled = true;
+
             StreamWriter writer = null;
             try
             {
@@ -51,6 +53,9 @@
                     writer.Dispose();
                 }
             }
+
+            YKToolkit.Controls.MessageBox.Show("未処理例外が発生したのでアプリケーションを終了します。" + Environment.NewLine + "詳細は log.txt を参照してください。", "Oops...");
+            this.Shutdown();
         }
     }
 }
