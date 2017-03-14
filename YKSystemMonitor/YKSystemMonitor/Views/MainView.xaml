@@ -181,6 +181,7 @@
                                 <StackPanel Grid.RowSpan="4" Grid.Column="4" Margin="6,0,0,0">
                                     <CheckBox x:Name="IsLegendEnabled" Content="凡例を表示する" IsChecked="True" />
                                     <CheckBox x:Name="IsInformationEnabled" Content="マウスオーバーで情報を表示する" IsChecked="True" />
+                                    <CheckBox Content="縦軸を自動的に変更する" IsChecked="{Binding IsAutoScalingEnabled}" />
                                 </StackPanel>
                             </Grid>
 
