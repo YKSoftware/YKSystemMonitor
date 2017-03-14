@@ -16,11 +16,8 @@
         /// <param name="instanceName">Process カテゴリにあるインスタンス名を指定します。</param>
         public ProcessCounter(string instanceName)
         {
-            var category = new PerformanceCounterCategory("Process");
-            if (category.GetInstanceNames().Contains(instanceName ?? ""))
-            {
-                this._counters = category.GetCounters(instanceName);
-            }
+            this._instanceName = instanceName;
+            Init();
         }
 
         #endregion コンストラクタ
@@ -71,21 +68,58 @@
         /// </summary>
         public void UpdateData()
         {
-            try
+            if (this._counters.Any())
             {
-                this.WorkingSet = this.WorkingSetCounter != null ? this.WorkingSetCounter.NextValue() / 1024.0 / 1024.0 : 0.0;
-                this.PrivateWorkingSet = this.PrivateWorkingSetCounter != null ? this.PrivateWorkingSetCounter.NextValue() / 1024.0 / 1024.0 : 0.0;
-                this.VirtualBytes = this.VirtualBytesCounter != null ? this.VirtualBytesCounter.NextValue() / 1024.0 / 1024.0 : 0.0;
-                this.ThreadCount = this.ThreadCounter != null ? (int)this.ThreadCounter.NextValue() : 0;
-                this.PageFaults = this.PageFaultsCounter != null ? (int)this.PageFaultsCounter.NextValue() : 0;
+                try
+                {
+                    this.WorkingSet = this.WorkingSetCounter != null ? this.WorkingSetCounter.NextValue() / 1024.0 / 1024.0 : 0.0;
+                    this.PrivateWorkingSet = this.PrivateWorkingSetCounter != null ? this.PrivateWorkingSetCounter.NextValue() / 1024.0 / 1024.0 : 0.0;
+                    this.VirtualBytes = this.VirtualBytesCounter != null ? this.VirtualBytesCounter.NextValue() / 1024.0 / 1024.0 : 0.0;
+                    this.ThreadCount = this.ThreadCounter != null ? (int)this.ThreadCounter.NextValue() : 0;
+                    this.PageFaults = this.PageFaultsCounter != null ? (int)this.PageFaultsCounter.NextValue() : 0;
+                }
+                catch
+                {
+                    this._counters = new PerformanceCounter[0];
+                    Init();
+                }
             }
-            catch
+            else
             {
-                this._counters = new PerformanceCounter[0];
+                Init();
             }
         }
 
         #endregion 公開メソッド
+
+        #region private メソッド
+
+        /// <summary>
+        /// 初期化をおこないます。
+        /// </summary>
+        private void Init()
+        {
+            var category = new PerformanceCounterCategory("Process");
+            if (category.GetInstanceNames().Contains(this._instanceName ?? ""))
+            {
+                this._counters = category.GetCounters(this._instanceName);
+            }
+            ClearProperties();
+        }
+
+        /// <summary>
+        /// プロパティ値をクリアします。
+        /// </summary>
+        private void ClearProperties()
+        {
+            this.WorkingSet = 0.0;
+            this.PrivateWorkingSet = 0.0;
+            this.VirtualBytes = 0.0;
+            this.ThreadCount = 0;
+            this.PageFaults = 0;
+        }
+
+        #endregion private メソッド
 
         #region 公開プロパティ
 
@@ -140,5 +174,14 @@
         }
 
         #endregion 公開プロパティ
+
+        #region private フィールド
+
+        /// <summary>
+        /// Process カテゴリにあるインスタンス名
+        /// </summary>
+        private string _instanceName;
+
+        #endregion private フィールド
     }
 }

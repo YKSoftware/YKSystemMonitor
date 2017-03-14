@@ -10,11 +10,7 @@
     /// </summary>
     internal class CounterManager : NotificationObject
     {
-        private static readonly string[] _defaultNames = new string[]
-        {
-            "firefox",
-            "devenv",
-        };
+        #region コンストラクタ
 
         /// <summary>
         /// 新しいインスタンスを生成します。
@@ -22,19 +18,12 @@
         public CounterManager()
         {
             this.ProcessNames = this._processManager.GetProcessNames().ToArray();
-            foreach (var name in _defaultNames)
-            {
-                if (this.ProcessNames.Contains(name))
-                {
-                    this.CurrentProcessName = name;
-                    break;
-                }
-            }
-
-            this._updateTimer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(1) };
-            this._updateTimer.Tick += OnTick_UpdateTimer;
-            this._updateTimer.Start();
+            InitializingTimer();
         }
+
+        #endregion コンストラクタ
+
+        #region イベントハンドラ
 
         /// <summary>
         /// 更新用タイマーイベントハンドラ
@@ -71,6 +60,8 @@
             RaisePropertyChanged("");
             RaiseTick();
         }
+
+        #endregion イベントハンドラ
 
         #region イベント
 
@@ -172,6 +163,7 @@
             {
                 if (SetProperty(ref this._currentProcessName, value))
                 {
+                    InitializingTimer();
                     this._processManager.CurrentProcessName = this._currentProcessName;
                     RaisePropertyChanged("CurrentProcessCounter");
                     RaiseCurrentProcessNameChanged();
@@ -185,6 +177,24 @@
         public ProcessCounter CurrentProcessCounter { get { return this._processManager.CurrentCounter; } }
 
         #endregion 公開プロパティ
+
+        #region private メソッド
+
+        /// <summary>
+        /// タイマーを初期化します。
+        /// </summary>
+        private void InitializingTimer()
+        {
+            if (this._updateTimer != null)
+            {
+                this._updateTimer.Stop();
+            }
+            this._updateTimer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(1) };
+            this._updateTimer.Tick += OnTick_UpdateTimer;
+            this._updateTimer.Start();
+        }
+
+        #endregion private メソッド
 
         #region private フィールド
 
